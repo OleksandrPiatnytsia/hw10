@@ -90,27 +90,36 @@ def change(*args):
     elif len(params_list) > 2:
         raise ValueError(f"Inputted not correctly data: {input_params}: to mach parameters!")
 
-    phone = params_list[1].strip()
-
-    for ch in phone:
-        if not ch.isdigit():
-            raise ValueError(f"Inputted not correctly data: {params_list[1]}: must consist only digits!")
-
     contact_name = params_list[0].strip().title()
 
-    for k, v in CONTACT_DICT.items():
-        if v == phone:
-            raise IndexError(
-                f"Inputted phone: '{phone}' already have contact: '{get_formated_contact(contact_name, phone)}'")
+    record_exist = CONTACT_DICT.get(contact_name)
 
-    contact_exist = CONTACT_DICT.get(contact_name)
+    if record_exist:
 
-    CONTACT_DICT.update({contact_name: phone})
+        phones_params = params_list[1].strip().split(" ")
 
-    if contact_exist:
-        return f"{get_formated_contact(contact_name, phone)} - is changed"
-    else:
-        return f"{get_formated_contact(contact_name, phone)} - added to contacts"
+        old_phone = phones_params[0]
+
+        for ch in old_phone:
+            if not ch.isdigit():
+                raise ValueError(f"Inputted not correctly data: {old_phone}: must consist only digits!")
+
+        if len(phones_params) > 1:
+            new_phone = params_list[1]
+
+            for ch in new_phone:
+                if not ch.isdigit():
+                    raise ValueError(f"Inputted not correctly data: {new_phone}: must consist only digits!")
+
+            record_exist.change_phone(Phone(old_phone), new_phone)
+
+            return f"{record_exist} - is changed"
+
+        else:
+
+            record_exist.remove_phone(new_phone)
+
+            return f"{record_exist} - is removed"
 
 
 @input_error
@@ -119,9 +128,9 @@ def phone(*args):
 
     result_list = []
     if input_contact_name:
-        for contact_name, phone in CONTACT_DICT.items():
+        for contact_name, record in CONTACT_DICT.items():
             if input_contact_name.lower() in contact_name.lower():
-                result_list.append(get_formated_contact(contact_name, phone))
+                result_list.append(str(record))
     else:
         raise ValueError("Parameter 'contact name' is empty, try again or use 'help'")
 
@@ -162,7 +171,8 @@ CONTACT_DICT = AddressBook()
 previous_contacts = {"Bob Marley": "0967845456",
                      "Borys Johnson": "0967845111",
                      "Lara Croft": "0967111456",
-                     "Bred Pitt": "0961223456"}
+                     "Bred Pitt": "0961223456",
+                     "test": "123"}
 
 for k, v in previous_contacts.items():
     CONTACT_DICT.add_record(Record(Name(k), Phone(v)))

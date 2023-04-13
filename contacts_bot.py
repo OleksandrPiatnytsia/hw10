@@ -33,7 +33,8 @@ def get_func_from_text(input_text: str):
 def help(*args):
     return f"""Hello! I am contact manager bot!
 I can add new contact with command: 'add', use following syntax: add 'contact name, phone'
-I can change existing contact with command: 'change', use following syntax: change 'contact name, phone'
+I can add new contact with command: 'del', use following syntax: del 'contact name, deleted_phone'
+I can change existing contact with command: 'change', use following syntax: change 'contact name, old_phone, new_phone'
 I can find contact by phone with command: 'phone', use following syntax: phone 'contact name'
 For viewing all list use command: 'show'
 For exit use commands: 'stop', 'close', 'exit' or 'good bye'"""
@@ -56,25 +57,24 @@ def add(*args):
     input_params = args[0]
     params_list = input_params.split(",")
     if len(params_list) == 1:
-        raise ValueError(f"Inputted not correctly data: {input_params}: ',' - is missing: ''")
+        return f"Inputted not correctly data: {input_params}: ',' - is missing: ''"
     elif len(params_list) > 2:
-        raise ValueError(f"Inputted not correctly data: {input_params}: to mach parameters!")
+        return f"Inputted not correctly data: {input_params}: to mach parameters!"
 
     phone = params_list[1].strip()
 
     for ch in phone:
         if not ch.isdigit():
-            raise ValueError(f"Inputted not correctly data: {params_list[1]}: must consist only digits!")
+            return f"Inputted not correctly data: {params_list[1]}: must consist only digits!"
 
     contact_name = params_list[0].strip().title()
 
     if CONTACT_DICT.get(contact_name):
-        raise IndexError(f"Inputted name: '{contact_name}' already exist")
+        return f"Inputted name: '{contact_name}' already exist"
 
     for k, v in CONTACT_DICT.items():
         if v == phone:
-            raise IndexError(
-                f"Inputted phone: '{phone}' already have contact: '{get_formated_contact(contact_name, phone)}'")
+            return f"Inputted phone: '{phone}' already have contact: '{get_formated_contact(contact_name, phone)}'"
 
     CONTACT_DICT.add_record(Record(Name(contact_name), Phone(phone)))
 
@@ -82,17 +82,46 @@ def add(*args):
 
 
 @input_error
-def change(*args):
+def remove_phone(*args):
     input_params = args[0]
     params_list = input_params.split(",")
-    if len(params_list) == 1:
-        raise ValueError(f"Inputted not correctly data: {input_params}: ',' - is missing: ''")
+    if len(params_list) < 1:
+        return f"Inputted not correctly data: {input_params}! Phone or number absent!"
     elif len(params_list) > 2:
-        raise ValueError(f"Inputted not correctly data: {input_params}: to mach parameters!")
+        return f"Inputted not correctly data: {input_params}: to mach parameters!"
 
     contact_name = params_list[0].strip().title()
 
-    record_exist = CONTACT_DICT.get(contact_name)
+    record_exist: Record = CONTACT_DICT.get(contact_name)
+
+    if record_exist:
+
+        phones_params = params_list[1].strip().split(" ")
+
+        phone_ = phones_params[0]
+
+        for ch in phone_:
+            if not ch.isdigit():
+                return f"Inputted not correctly data: {old_phone}: must consist only digits!"
+
+        return record_exist.remove_phone(phone_)
+
+    else:
+        return f"{contact_name} - no such contact"
+
+
+@input_error
+def change(*args):
+    input_params = args[0]
+    params_list = input_params.split(",")
+    if len(params_list) < 2:
+        return f"Inputted not correctly data: {input_params}! Phone or number absent!"
+    elif len(params_list) > 3:
+        return f"Inputted not correctly data: {input_params}: to mach parameters!"
+
+    contact_name = params_list[0].strip().title()
+
+    record_exist: Record = CONTACT_DICT.get(contact_name)
 
     if record_exist:
 
@@ -102,24 +131,20 @@ def change(*args):
 
         for ch in old_phone:
             if not ch.isdigit():
-                raise ValueError(f"Inputted not correctly data: {old_phone}: must consist only digits!")
+                return f"Inputted not correctly data: {old_phone}: must consist only digits!"
 
-        if len(phones_params) > 1:
-            new_phone = params_list[1]
+        new_phone = params_list[2].strip().split(" ")[0]
 
-            for ch in new_phone:
-                if not ch.isdigit():
-                    raise ValueError(f"Inputted not correctly data: {new_phone}: must consist only digits!")
+        for ch in new_phone:
+            if not ch.isdigit():
+                return f"Inputted not correctly data: {new_phone}: must consist only digits!"
 
-            record_exist.change_phone(Phone(old_phone), new_phone)
+        result = record_exist.change_phone(Phone(old_phone), new_phone)
 
-            return f"{record_exist} - is changed"
+        return result
 
-        else:
-
-            record_exist.remove_phone(new_phone)
-
-            return f"{record_exist} - is removed"
+    else:
+        return f"{contact_name} - no such contact"
 
 
 @input_error
@@ -158,6 +183,7 @@ COMMANDS_LIST = {"hello": hello,
                  "help": help,
                  "add": add,
                  "change": change,
+                 "del": remove_phone,
                  "phone": phone,
                  "show all": show_all,
                  "show": show_all,
@@ -172,7 +198,7 @@ previous_contacts = {"Bob Marley": "0967845456",
                      "Borys Johnson": "0967845111",
                      "Lara Croft": "0967111456",
                      "Bred Pitt": "0961223456",
-                     "test": "123"}
+                     "Test": "123"}
 
 for k, v in previous_contacts.items():
     CONTACT_DICT.add_record(Record(Name(k), Phone(v)))

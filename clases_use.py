@@ -53,7 +53,7 @@ class Record:
             for exist_phone in self.phones:
                 if exist_phone.value == phone:
                     self.phones.remove(exist_phone)
-                    raise ValueError(f"Phone {phone} removed!")
+                    return f"Phone {phone} removed!"
 
     def change_phone(self, old_phone: Phone, new_phone: str):
 
@@ -64,18 +64,18 @@ class Record:
             raise ValueError("Old phone must be class Phone")
 
         if old_phone.value == new_phone:
-            raise ValueError(f"The phones are the same")
+            return f"The phones are the same"
 
         phone_changed = False
         for exist_phone in self.phones:
-            if exist_phone.value is old_phone.value:
+            if exist_phone.value == old_phone.value:
                 exist_phone.change_phone(new_phone)
                 phone_changed = True
 
         if phone_changed:
-            raise ValueError(f"Phone {old_phone} is changed")
+            return f"Phone {old_phone} is changed"
         else:
-            raise ValueError(f"Phone {old_phone} cant be changed! reason: phone exist!")
+            return f"Phone {old_phone} cant be changed! reason: phone exist!"
 
 
 class AddressBook(UserDict):
